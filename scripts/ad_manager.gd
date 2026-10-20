@@ -1,13 +1,13 @@
 extends Node
 ## AdManager - Google AdMob integration (Poing AdMob Plugin v5)
-## Test banners, completion interstitials, and optional rewarded hints.
+## Banners, completion interstitials, and optional rewarded hints.
 
 # Google AdMob Ad Unit IDs
-const ADMOB_APP_ID: String = "ca-app-pub-3940256099942544~3347511713"
-const BANNER_AD_ID: String = "ca-app-pub-3940256099942544/6300978111"
-const INTERSTITIAL_AD_ID: String = "ca-app-pub-3940256099942544/1033173712"
-const REWARDED_AD_ID: String = "ca-app-pub-3940256099942544/5224354917"
-const REWARDED_INTERSTITIAL_AD_ID: String = "ca-app-pub-3940256099942544/5354046379"
+const ADMOB_APP_ID: String = "ca-app-pub-1852108665659812~2561823306"
+const BANNER_AD_ID: String = "ca-app-pub-1852108665659812/9860272553"
+const INTERSTITIAL_AD_ID: String = "ca-app-pub-1852108665659812/2005833268"
+const REWARDED_AD_ID: String = "ca-app-pub-1852108665659812/8552516586"
+const REWARDED_INTERSTITIAL_AD_ID: String = ""
 
 static var instance: Node
 static var is_initialized: bool = false
@@ -60,14 +60,6 @@ func _ready() -> void:
 	if OS.get_name() == "Android":
 		_plugin_available = true
 		
-		# Auto-inject test IDs in debug builds to prevent No Fill errors
-		if OS.has_feature("debug"):
-			print("[AdManager] Debug build detected: Using Test IDs")
-			banner_id = "ca-app-pub-3940256099942544/6300978111"
-			interstitial_id = "ca-app-pub-3940256099942544/1033173712"
-			rewarded_id = "ca-app-pub-3940256099942544/5224354917"
-		rewarded_interstitial_id = "ca-app-pub-3940256099942544/5354046379"
-			
 		print("[AdManager] Running on Android - initializing AdMob with banner: ", banner_id)
 		_init_admob()
 	else:
@@ -288,7 +280,7 @@ func _on_hint_unavailable(message: String) -> void:
 # =================== REWARDED INTERSTITIAL ===================
 
 func _load_rewarded_interstitial() -> void:
-	if not is_initialized or _rewarded_interstitial_ad:
+	if not is_initialized or _rewarded_interstitial_ad or rewarded_interstitial_id.is_empty():
 		return
 	var loader := RewardedInterstitialAdLoader.new()
 	_rewarded_interstitial_cb = RewardedInterstitialAdLoadCallback.new()
@@ -306,6 +298,9 @@ func _load_rewarded_interstitial() -> void:
 	loader.load(rewarded_interstitial_id, AdRequest.new(), _rewarded_interstitial_cb)
 
 func show_rewarded_interstitial() -> bool:
+	if rewarded_interstitial_id.is_empty():
+		rewarded_interstitial_unavailable.emit("Rewarded interstitials are not configured.")
+		return false
 	if not _plugin_available:
 		rewarded_interstitial_unavailable.emit("Rewarded interstitials are available on Android builds only.")
 		return false
