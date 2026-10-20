@@ -1,5 +1,7 @@
-# Local Godot and Android output
+# Godot and Android output
 /.godot/
+/.import/
+/.mono/
 /build/
 /android/build/build/
 /android/build/.gradle/
@@ -15,10 +17,17 @@
 *.import
 *.apk
 *.aab
+*.exe
 *.log
 *.tmp
+*.translation
+~*.dll
+.nomedia
+export.cfg
+export_credentials.cfg
+data_*/
 
-# Requested exclusions: art/audio assets, level data, JSON, and signing material
+# Exclude art, audio, level banks, JSON, and signing material
 **/assets/
 *.json
 *.jks
@@ -28,7 +37,7 @@
 **/key.properties
 /icon.svg
 
-# Bundled platform variants and package documentation not used by this Android project
+# Unused platform variants and package documentation
 /addons/admob/downloads/
 /addons/admob/ios/
 /addons/admob/csharp/
@@ -37,9 +46,10 @@
 /addons/admob/internal/
 /addons/admob/gdscript/sample/
 
-# Local preview and command output
+# Local previews and command output
 /*.png
 /*.out
 /*.err
+/*.gd.uid
 /.preview*
 /.check*
