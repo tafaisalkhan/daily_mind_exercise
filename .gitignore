@@ -12,6 +12,7 @@
 /android/build/src/main/res/
 /android/build/src/androidTestInstrumented/
 /android/build/src/instrumented/
+/android/build/src/release/
 /android/.build_version
 /android/build/.build_version
 *.import

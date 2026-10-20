@@ -20,7 +20,7 @@ public final class DailyReminder {
     private static final String ENABLED = "enabled";
     private static final String CHANNEL = "daily_exercise";
     private static final String OPEN_DAILY = "open_daily_exercise";
-    static final String ACTION_REMIND = "com.mathmind.game.DAILY_REMINDER";
+    static final String ACTION_REMIND = "com.dailyexcersize.game.DAILY_REMINDER";
 
     private DailyReminder() {}
 
