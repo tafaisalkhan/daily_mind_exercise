@@ -14,7 +14,7 @@ general/android/app_id="ca-app-pub-3940256099942544~3347511713"
 
 [application]
 
-config/name="Daily Mind Exercise"
+config/name="Daily Mind Excersize"
 config/description="Daily word and number brain games"
 run/main_scene="res://scenes/splash.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")

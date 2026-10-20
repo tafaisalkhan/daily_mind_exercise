@@ -1,4 +1,4 @@
-# Math Mind Base Game
+# Daily Mind Excersize Base Game
 
 This folder is a reusable, independent Godot project. It contains the gameplay code, scenes, AdMob plugin, Android Gradle template, and supporting assets needed to build another game.
 

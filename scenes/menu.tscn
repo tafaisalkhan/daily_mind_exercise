@@ -61,7 +61,7 @@ theme_override_colors/font_shadow_color = Color(0.035, 0.035, 0.23, 1)
 theme_override_constants/shadow_offset_x = 3
 theme_override_constants/shadow_offset_y = 4
 theme_override_font_sizes/font_size = 40
-text = "DAILY MIND\nEXERCISE"
+text = "DAILY MIND\nEXCERSIZE"
 horizontal_alignment = 1
 
 [node name="Mascot" type="TextureRect" parent="Margin/VBox"]

@@ -1,8 +1,8 @@
-# Math Mind Privacy Policy
+# Daily Mind Excersize Privacy Policy
 
-Last updated: October 9, 2026
+Last updated: October 20, 2026
 
-This Privacy Policy explains how Math Mind (“the Game”) handles information when you use the Android application published under package name **com.dailyexcersize.game**.
+This Privacy Policy explains how Daily Mind Excersize (“the Game”) handles information when you use the Android application published under package name **com.dailyexcersize.game**.
 
 ## Information stored on your device
 
@@ -18,11 +18,11 @@ The free version may display advertisements. Advertising providers may process d
 
 ## In-app purchases
 
-The optional Remove Ads purchase is processed by Google Play. Math Mind does not receive or store complete payment-card details.
+The optional Remove Ads purchase is processed by Google Play. Daily Mind Excersize does not receive or store complete payment-card details.
 
 ## Children
 
-Math Mind is designed for a general and family audience. The Game does not ask players to submit names, messages, photographs, or other personal content. Parents should supervise purchases and permissions.
+Daily Mind Excersize is designed for a general and family audience. The Game does not ask players to submit names, messages, photographs, or other personal content. Parents should supervise purchases and permissions.
 
 ## Retention and deletion
 
@@ -36,4 +36,4 @@ This policy may be updated when features, legal requirements, or third-party ser
 
 For privacy questions, email [muhammadfaysal.khan7@gmail.com](mailto:muhammadfaysal.khan7@gmail.com).
 
-© 2026 Math Mind. All rights reserved.
+© 2026 Daily Mind Excersize. All rights reserved.

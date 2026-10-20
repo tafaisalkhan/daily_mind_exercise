@@ -84,7 +84,7 @@ public final class DailyReminder {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager == null) return;
         if (Build.VERSION.SDK_INT >= 26) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL, "Daily exercise",
+            NotificationChannel channel = new NotificationChannel(CHANNEL, "Daily Mind Excersize reminders",
                     NotificationManager.IMPORTANCE_DEFAULT);
             manager.createNotificationChannel(channel);
         }
