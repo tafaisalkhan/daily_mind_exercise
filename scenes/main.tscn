@@ -1,0 +1,287 @@
+[gd_scene load_steps=10 format=3 uid="uid://c6mainscene003"]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" uid="uid://c6gridtile001" path="res://scenes/grid_tile.tscn" id="2_gtile"]
+[ext_resource type="PackedScene" uid="uid://c6numtile002" path="res://scenes/number_tile.tscn" id="3_ntile"]
+[ext_resource type="PackedScene" path="res://scenes/top_menu.tscn" id="4_top"]
+[ext_resource type="PackedScene" path="res://scenes/puzzle_board.tscn" id="5_board"]
+[ext_resource type="PackedScene" path="res://scenes/bottom_menu.tscn" id="6_bottom"]
+[ext_resource type="Texture2D" path="res://assets/generated/gameplay-background.png" id="7_bg"]
+[ext_resource type="Texture2D" path="res://assets/generated/victory-frame.png" id="8_frame"]
+[ext_resource type="Texture2D" path="res://assets/generated/victory-star.png" id="9_star"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+grid_tile_scene = ExtResource("2_gtile")
+number_tile_scene = ExtResource("3_ntile")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("7_bg")
+expand_mode = 1
+stretch_mode = 6
+[node name="GameTypeSprite" type="TextureRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -245.0
+offset_top = -125.0
+offset_right = 245.0
+offset_bottom = 365.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+self_modulate = Color(1, 1, 1, 0.32)
+[node name="MainVBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="TopMenu" parent="MainVBox" instance=ExtResource("4_top")]
+
+[node name="PuzzleBoard" parent="MainVBox" instance=ExtResource("5_board")]
+
+[node name="BottomMenu" parent="MainVBox" instance=ExtResource("6_bottom")]
+
+[node name="VictoryDimmer" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.025, 0.76)
+mouse_filter = 1
+z_index = 190
+
+[node name="VictoryShadow" type="TextureRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchor_left = 0.06
+anchor_top = 0.5
+anchor_right = 0.94
+anchor_bottom = 0.5
+offset_left = 12.0
+offset_top = -311.0
+offset_right = 12.0
+offset_bottom = 339.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("8_frame")
+expand_mode = 1
+stretch_mode = 5
+self_modulate = Color(0.02, 0.015, 0.01, 0.72)
+mouse_filter = 2
+z_index = 198
+[node name="VictoryDialog" type="TextureRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.06
+anchor_top = 0.5
+anchor_right = 0.94
+anchor_bottom = 0.5
+offset_top = -325.0
+offset_bottom = 325.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("8_frame")
+expand_mode = 1
+stretch_mode = 5
+z_index = 200
+
+[node name="LevelBanner" type="Label" parent="VictoryDialog"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 100.0
+offset_bottom = 165.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.35, 0.03, 0.02, 0.8)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 38
+text = "LEVEL 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBox" type="VBoxContainer" parent="VictoryDialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 86.0
+offset_top = 205.0
+offset_right = -86.0
+offset_bottom = -125.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="VicTitle" type="Label" parent="VictoryDialog/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.25, 0.09, 0.025, 1)
+theme_override_font_sizes/font_size = 36
+text = "COMPLETE!"
+horizontal_alignment = 1
+
+[node name="Stars" type="HBoxContainer" parent="VictoryDialog/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 94)
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Star1" type="TextureRect" parent="VictoryDialog/VBox/Stars"]
+custom_minimum_size = Vector2(88, 88)
+layout_mode = 2
+texture = ExtResource("9_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Star2" type="TextureRect" parent="VictoryDialog/VBox/Stars"]
+custom_minimum_size = Vector2(88, 88)
+layout_mode = 2
+texture = ExtResource("9_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Star3" type="TextureRect" parent="VictoryDialog/VBox/Stars"]
+custom_minimum_size = Vector2(88, 88)
+layout_mode = 2
+texture = ExtResource("9_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Reward" type="Label" parent="VictoryDialog/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.33, 0.16, 0.04, 1)
+theme_override_font_sizes/font_size = 24
+text = "+50 COINS"
+horizontal_alignment = 1
+
+[node name="Streak" type="Label" parent="VictoryDialog/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.33, 0.16, 0.04, 1)
+theme_override_font_sizes/font_size = 21
+text = "Streak 1"
+horizontal_alignment = 1
+
+[node name="NextLevelButton" type="Button" parent="VictoryDialog/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 54)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 23
+text = "▶  NEXT LEVEL"
+[node name="PauseDimmer" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+process_mode = 3
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.025, 0.7)
+mouse_filter = 1
+z_index = 290
+
+[node name="PauseDialog" type="TextureRect" parent="."]
+unique_name_in_owner = true
+visible = false
+process_mode = 3
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -190.0
+offset_top = -245.0
+offset_right = 190.0
+offset_bottom = 245.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("8_frame")
+expand_mode = 1
+stretch_mode = 5
+z_index = 300
+
+[node name="VBox" type="VBoxContainer" parent="PauseDialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 82.0
+offset_top = 135.0
+offset_right = -82.0
+offset_bottom = -90.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 22
+alignment = 1
+
+[node name="Title" type="Label" parent="PauseDialog/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.08, 0.3, 0.2, 1)
+theme_override_font_sizes/font_size = 36
+text = "GAME PAUSED"
+horizontal_alignment = 1
+
+[node name="Message" type="Label" parent="PauseDialog/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.22, 0.15, 0.08, 1)
+theme_override_font_sizes/font_size = 18
+text = "Your progress is safe"
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="PauseDialog/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "▶  RESUME"
+
+[node name="BackToMenuButton" type="Button" parent="PauseDialog/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "‹  LEVEL SELECT"

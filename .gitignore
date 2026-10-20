@@ -1,0 +1,45 @@
+# Local Godot and Android output
+/.godot/
+/build/
+/android/build/build/
+/android/build/.gradle/
+/android/build/assetPackInstallTime/
+/android/build/libs/
+/android/build/res/
+/android/build/src/main/assets/
+/android/build/src/main/res/
+/android/build/src/androidTestInstrumented/
+/android/build/src/instrumented/
+/android/.build_version
+/android/build/.build_version
+*.import
+*.apk
+*.aab
+*.log
+*.tmp
+
+# Requested exclusions: art/audio assets, level data, JSON, and signing material
+**/assets/
+*.json
+*.jks
+*.keystore
+*.p12
+*.pfx
+**/key.properties
+/icon.svg
+
+# Bundled platform variants and package documentation not used by this Android project
+/addons/admob/downloads/
+/addons/admob/ios/
+/addons/admob/csharp/
+/addons/admob/docs/
+/addons/admob/skills/
+/addons/admob/internal/
+/addons/admob/gdscript/sample/
+
+# Local preview and command output
+/*.png
+/*.out
+/*.err
+/.preview*
+/.check*

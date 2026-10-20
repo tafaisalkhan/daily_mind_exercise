@@ -1,0 +1,5 @@
+# Keep the Android AdMob core libraries used by this project.
+/bin/*
+!/bin/ads/
+!/bin/package.gd
+!/bin/package.gd.uid

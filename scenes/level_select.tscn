@@ -1,0 +1,92 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_select.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/generated/daily-mind-owl-menu-background.png" id="2_bg"]
+[ext_resource type="FontFile" path="res://assets/fonts/LuckiestGuy-Regular.ttf" id="3_title_font"]
+
+[node name="LevelSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.025, 0.025, 0.16, 0.32)
+mouse_filter = 2
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = 26.0
+offset_right = -18.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Layout" type="VBoxContainer" parent="SafeArea"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="SafeArea/Layout"]
+custom_minimum_size = Vector2(0, 74)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="SafeArea/Layout/Header"]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "‹"
+
+[node name="Title" type="Label" parent="SafeArea/Layout/Header"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_title_font")
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.02, 0.12, 0.08, 1)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 4
+theme_override_font_sizes/font_size = 34
+text = "SELECT WORLD"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="SafeArea/Layout/Header"]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="SafeArea/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+vertical_scroll_mode = 0
+horizontal_scroll_mode = 2
+scroll_deadzone = 8
+
+[node name="Worlds" type="HBoxContainer" parent="SafeArea/Layout/Scroll"]
+custom_minimum_size = Vector2(0, 790)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 22

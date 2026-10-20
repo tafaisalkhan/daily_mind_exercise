@@ -1,0 +1,7 @@
+[gd_resource type="Theme" format=3 uid="uid://c8hnl2mkgs65j"]
+
+[ext_resource type="FontVariation" path="res://resources/body_font.tres" id="1_font"]
+
+[resource]
+default_font = ExtResource("1_font")
+default_font_size = 18

@@ -1,0 +1,133 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/splash.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/generated/daily-mind-owl-splash-background.png" id="2_background"]
+[ext_resource type="Texture2D" path="res://assets/generated/daily-mind-owl-mascot.png" id="3_mascot"]
+[ext_resource type="FontFile" path="res://assets/fonts/LuckiestGuy-Regular.ttf" id="4_title_font"]
+
+[node name="Splash" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_background")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.03, 0.02, 0.14, 0.12)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -75.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Brand" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="MascotSpace" type="Control" parent="Center/Brand"]
+custom_minimum_size = Vector2(320, 310)
+layout_mode = 2
+
+[node name="Mascot" type="TextureRect" parent="Center/Brand/MascotSpace"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -155.0
+offset_top = -155.0
+offset_right = 155.0
+offset_bottom = 155.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_mascot")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Center/Brand"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_title_font")
+theme_override_colors/font_color = Color(1, 0.98, 0.92, 1)
+theme_override_colors/font_shadow_color = Color(0.04, 0.04, 0.26, 1)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 4
+theme_override_font_sizes/font_size = 43
+text = "DAILY MIND\nEXERCISE"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Center/Brand"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 1, 0.89, 1)
+theme_override_colors/font_shadow_color = Color(0.04, 0.04, 0.26, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 19
+text = "WORDS  •  NUMBERS  •  FOCUS"
+horizontal_alignment = 1
+
+[node name="Bottom" type="MarginContainer" parent="."]
+layout_mode = 1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 54.0
+offset_top = -154.0
+offset_right = -54.0
+offset_bottom = -57.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Loader" type="VBoxContainer" parent="Bottom"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="LoadingLabel" type="Label" parent="Bottom/Loader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.98, 0.92, 1)
+theme_override_colors/font_shadow_color = Color(0.04, 0.04, 0.26, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 17
+text = "PREPARING YOUR DAILY CHALLENGE"
+horizontal_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="Bottom/Loader"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+show_percentage = false
+
+[node name="Tagline" type="Label" parent="Bottom/Loader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.63, 1, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+text = "A LITTLE SHARPER EVERY DAY"
+horizontal_alignment = 1

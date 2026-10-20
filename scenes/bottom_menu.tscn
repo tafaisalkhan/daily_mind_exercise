@@ -1,0 +1,81 @@
+[gd_scene load_steps=4 format=3 uid="uid://bci3v8k0qbv3n"]
+
+[ext_resource type="Texture2D" path="res://assets/generated/ui-atlas.png" id="1_atlas"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_undo"]
+atlas = ExtResource("1_atlas")
+region = Rect2(468, 619, 140, 145)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hint"]
+atlas = ExtResource("1_atlas")
+region = Rect2(612, 619, 140, 145)
+
+[node name="BottomMenu" type="Control"]
+custom_minimum_size = Vector2(0, 136)
+layout_mode = 2
+
+[node name="ActionToolbar" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 10
+alignment = 0
+
+[node name="UndoButton" type="Button" parent="ActionToolbar"]
+custom_minimum_size = Vector2(68, 68)
+layout_mode = 2
+flat = true
+tooltip_text = "Undo"
+
+[node name="Icon" type="TextureRect" parent="ActionToolbar/UndoButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = -3.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("AtlasTexture_undo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ToolbarSpacer" type="Control" parent="ActionToolbar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HintButton" type="Button" parent="ActionToolbar"]
+custom_minimum_size = Vector2(68, 68)
+layout_mode = 2
+flat = true
+tooltip_text = "Hint • 5 coins"
+
+[node name="Icon" type="TextureRect" parent="ActionToolbar/HintButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = -3.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("AtlasTexture_hint")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SearchButton" type="Button" parent="ActionToolbar"]
+visible = false
+
+[node name="AdCoinsButton" type="Button" parent="ActionToolbar"]
+visible = false
