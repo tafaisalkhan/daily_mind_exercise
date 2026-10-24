@@ -64,6 +64,7 @@ func _ready() -> void:
 	# Connect UI buttons
 	undo_btn.pressed.connect(_on_undo_pressed)
 	hint_btn.pressed.connect(_on_hint_pressed)
+	hint_btn.tooltip_text = "Hint" if OS.get_name() != "Android" else "Watch an ad for a hint"
 	search_btn.pressed.connect(_on_search_pressed)
 	previous_level_btn.pressed.connect(_on_previous_level_pressed)
 	browse_next_level_btn.pressed.connect(_on_browse_next_level_pressed)
@@ -318,17 +319,12 @@ func _on_undo_pressed() -> void:
 		selected_bank_tile = null
 
 func _on_hint_pressed() -> void:
-	# Every hint is earned by completing a rewarded ad, even after Remove Ads.
-	var reward_callback := Callable(self, "_apply_rewarded_hint")
-	var unavailable_callback := Callable(self, "_on_hint_ad_unavailable").bind(reward_callback)
-	if not AdManager.rewarded_video_completed.is_connected(reward_callback):
-		AdManager.rewarded_video_completed.connect(reward_callback, CONNECT_ONE_SHOT)
-	AdManager.rewarded_video_unavailable.connect(unavailable_callback, CONNECT_ONE_SHOT)
-	AdManager.show_rewarded_video()
+	if OS.get_name() != "Android":
+		_apply_rewarded_hint()
+		return
+	AdManager.request_rewarded_hint(Callable(self, "_apply_rewarded_hint"), Callable(self, "_on_hint_ad_unavailable"))
 
-func _on_hint_ad_unavailable(message: String, reward_callback: Callable) -> void:
-	if AdManager.rewarded_video_completed.is_connected(reward_callback):
-		AdManager.rewarded_video_completed.disconnect(reward_callback)
+func _on_hint_ad_unavailable(message: String) -> void:
 	var dialog := AcceptDialog.new()
 	dialog.title = "AD NOT READY"
 	dialog.dialog_text = message

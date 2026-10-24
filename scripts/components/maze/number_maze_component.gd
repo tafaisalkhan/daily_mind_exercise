@@ -257,6 +257,9 @@ func _after_move() -> void:
 	else:
 		_update_pads()
 
+func can_use_hint() -> bool:
+	return not is_finished and not moving
+
 func use_hint(_grid: GridContainer) -> bool:
 	if is_finished or moving:
 		return false
@@ -264,9 +267,7 @@ func use_hint(_grid: GridContainer) -> bool:
 	var answer := str(int(stops[step_index].get("addend", 0)))
 	for button in bank_buttons:
 		if not button.disabled and button.text == answer:
-			var tween := create_tween().set_loops(3)
-			tween.tween_property(button, "modulate", Color("#ffe04a"), 0.15)
-			tween.tween_property(button, "modulate", Color.WHITE, 0.15)
+			_try_number(button)
 			return true
 	return false
 

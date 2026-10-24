@@ -179,12 +179,24 @@ func use_hint(_grid: GridContainer) -> bool:
 	if is_finished:
 		return false
 	if mode == "already_ok":
-		status_label.text = "This word is already correct."
+		_finish_word()
+		return true
+	if mode == "remove_char":
+		var remove_index := int(level_data.get("remove_index", -1))
+		if remove_index < 0 or remove_index >= word_buttons.size():
+			return false
+		_on_word_tile_pressed(remove_index, word_buttons[remove_index])
 		return true
 	for index in range(mini(word_slots.size(), target_word.size())):
 		if word_slots[index] != target_word[index]:
-			word_buttons[index].modulate = Color("#ffce48")
-			status_label.text = "Check the highlighted letter."
+			word_slots[index] = target_word[index]
+			word_buttons[index].text = target_word[index]
+			word_buttons[index].modulate = Color("#77d995")
+			selected_slot = -1
+			_update_choice_buttons()
+			status_label.text = "Hint placed: %s" % target_word[index]
+			if word_slots == target_word:
+				_finish_word()
 			return true
 	return false
 

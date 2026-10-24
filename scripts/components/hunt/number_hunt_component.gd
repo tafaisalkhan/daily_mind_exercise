@@ -258,27 +258,14 @@ func _update_progress() -> void:
 	if progress_label != null:
 		progress_label.text = "%d / %d caught" % [catches, catch_goal]
 
+func can_use_hint() -> bool:
+	return not is_finished and not busy and is_instance_valid(target_orb)
+
 func use_hint(_grid: GridContainer) -> bool:
 	if is_finished or busy or not is_instance_valid(target_orb):
 		return false
-	_reveal_target()
+	_on_orb_pressed(target_orb, target_number)
 	return true
-
-func _reveal_target() -> void:
-	var orb := target_orb
-	var home: Vector2 = orb.get_meta("home")
-	if orb.has_meta("roam_tween"):
-		var roaming: Tween = orb.get_meta("roam_tween")
-		if roaming.is_valid():
-			roaming.kill()
-	var tween := orb.create_tween()
-	tween.tween_property(orb, "position", home, 0.3).set_trans(Tween.TRANS_SINE)
-	tween.set_loops(3)
-	tween.tween_property(orb, "modulate", Color("#fff15c"), 0.15)
-	tween.tween_property(orb, "modulate", Color.WHITE, 0.15)
-	await tween.finished
-	if is_instance_valid(orb) and orb == target_orb and not is_finished and not busy:
-		_start_roam(orb, home)
 
 func cancel_interactions() -> void:
 	busy = true

@@ -314,7 +314,7 @@ func _build_ui() -> void:
 	bottom_bar.add_child(clear_btn)
 
 	var hint_btn := Button.new()
-	hint_btn.text = "WATCH AD HINT"
+	hint_btn.text = "HINT" if OS.get_name() != "Android" else "WATCH AD HINT"
 	hint_btn.custom_minimum_size = Vector2(156, 54)
 	hint_btn.add_theme_font_size_override("font_size", 18)
 	hint_btn.add_theme_color_override("font_color", Color.WHITE)
@@ -820,6 +820,9 @@ func _refresh_slot_styles() -> void:
 
 func _use_hint() -> void:
 	if finished or checking_sequence or _first_empty_slot() == -1:
+		return
+	if OS.get_name() != "Android":
+		_grant_hint()
 		return
 	AdManager.request_rewarded_hint(Callable(self, "_grant_hint"), Callable(self, "_hint_unavailable"))
 

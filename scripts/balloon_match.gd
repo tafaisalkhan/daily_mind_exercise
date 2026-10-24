@@ -211,7 +211,7 @@ func _build_ui() -> void:
 	progress_label.offset_bottom = -12
 	add_child(progress_label)
 	var hint := Button.new()
-	hint.text = "WATCH AD HINT"
+	hint.text = "HINT" if OS.get_name() != "Android" else "WATCH AD HINT"
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	hint.offset_left = -164
 	hint.offset_top = -60
@@ -462,7 +462,13 @@ func _wrong(balloon: TextureButton) -> void:
 		_fail()
 
 func _hint() -> void:
-	if selected == null or finished:
+	if finished:
+		return
+	if _find_hint_pair().is_empty():
+		dock_label.text = "Wait for a matching pair of balloons, then try Hint."
+		return
+	if OS.get_name() != "Android":
+		_grant_hint()
 		return
 	AdManager.request_rewarded_hint(Callable(self, "_grant_hint"), Callable(self, "_hint_unavailable"))
 
@@ -470,15 +476,25 @@ func _hint_unavailable(message: String) -> void:
 	dock_label.text = message
 
 func _grant_hint() -> void:
-	if selected == null or finished:
+	if finished:
+		return
+	var pair := _find_hint_pair()
+	if pair.is_empty():
+		dock_label.text = "Wait for a matching pair of balloons, then try Hint."
 		return
 	AudioManager.play_hint()
-	for balloon in balloons:
-		if balloon != selected and int(balloon.get_meta("pair")) == int(selected.get_meta("pair")):
-			var tween := create_tween().set_loops(3)
-			tween.tween_property(balloon, "modulate", Color("#fff23d"), 0.16)
-			tween.tween_property(balloon, "modulate", Color.WHITE, 0.16)
-			break
+	if selected == null:
+		_balloon_tapped(pair[0])
+	_balloon_tapped(pair[1])
+
+func _find_hint_pair() -> Array[TextureButton]:
+	for first in balloons:
+		if is_instance_valid(selected) and first != selected:
+			continue
+		for second in balloons:
+			if first != second and int(first.get_meta("pair")) == int(second.get_meta("pair")):
+				return [first, second]
+	return []
 
 func _tick() -> void:
 	if finished:

@@ -30,6 +30,9 @@ func rebuild_choices(_grid: GridContainer) -> bool:
 func use_hint(_grid: GridContainer) -> bool:
 	return false
 
+func can_use_hint() -> bool:
+	return not is_finished
+
 func cancel_interactions() -> void:
 	pass
 

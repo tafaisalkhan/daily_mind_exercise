@@ -197,7 +197,7 @@ func _on_slot_pressed(index: int) -> void:
 		return
 	_try_place(index, selected_button, selected_word)
 
-func _try_place(index: int, button: Button, word: String) -> void:
+func _try_place(index: int, button: Button, word: String, play_sound: bool = true) -> void:
 	if is_finished or filled[index] or button.disabled:
 		return
 	if word != chain[index]:
@@ -215,8 +215,9 @@ func _try_place(index: int, button: Button, word: String) -> void:
 	for bank_button in bank_buttons:
 		if is_instance_valid(bank_button) and not bank_button.disabled:
 			bank_button.modulate = Color.WHITE
-	AudioManager.play_place(true)
-	status_label.text = "Good link! Keep the relay going."
+	if play_sound:
+		AudioManager.play_place(true)
+	status_label.text = "Hint placed: %s." % word if not play_sound else "Good link! Keep the relay going."
 	var tween := create_tween()
 	word_slots[index].pivot_offset = word_slots[index].size * 0.5
 	tween.tween_property(word_slots[index], "scale", Vector2(1.08, 1.08), 0.12).set_trans(Tween.TRANS_BACK)
@@ -239,14 +240,13 @@ func use_hint(_grid: GridContainer) -> bool:
 			continue
 		for bank_button in bank_buttons:
 			if is_instance_valid(bank_button) and not bank_button.disabled and str(bank_button.get_meta("word", "")) == chain[index]:
-				var tween := create_tween().set_loops(3)
-				tween.tween_property(word_slots[index], "modulate", Color("#ffdc50"), 0.16)
-				tween.tween_property(word_slots[index], "modulate", Color.WHITE, 0.16)
-				var bank_tween := create_tween().set_loops(3)
-				bank_tween.tween_property(bank_button, "modulate", Color("#ffdc50"), 0.16)
-				bank_tween.tween_property(bank_button, "modulate", Color.WHITE, 0.16)
+				_try_place(index, bank_button, chain[index], false)
 				return true
 	return false
+
+func show_hint_message(message: String) -> void:
+	if is_instance_valid(status_label):
+		status_label.text = message
 
 func _clear_drag() -> void:
 	dragging_button = null

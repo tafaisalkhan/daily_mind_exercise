@@ -198,6 +198,14 @@ func rebuild_choices(grid: GridContainer) -> bool:
 		grid.add_child(button)
 	return true
 
+func can_use_hint() -> bool:
+	if is_finished or balance_intro_playing or balance_holding_level or balance_wrong_ball_busy:
+		return false
+	for ball in balance_user_balls:
+		if not bool(ball.get("landed", false)):
+			return false
+	return true
+
 func use_hint(grid: GridContainer) -> bool:
 	if balance_intro_playing or balance_holding_level or balance_wrong_ball_busy:
 		return false

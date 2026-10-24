@@ -59,6 +59,7 @@ var timer_label: Label
 var hearts_label: Label
 var level_label: Label
 var coins_label: Label
+var hint_button: Button
 var title_label: Label
 var prompt_label: Label
 var progress_label: Label
@@ -193,13 +194,13 @@ func _build_ui() -> void:
 	tools.alignment = BoxContainer.ALIGNMENT_CENTER
 	tools.add_theme_constant_override("separation", 16)
 	column.add_child(tools)
-	var hint := Button.new()
-	hint.text = "WATCH AD FOR HINT"
-	hint.custom_minimum_size = Vector2(170, 58)
-	hint.add_theme_font_size_override("font_size", 19)
-	hint.add_theme_stylebox_override("normal", _button_style(Color("#248bc7")))
-	hint.pressed.connect(_use_hint)
-	tools.add_child(hint)
+	hint_button = Button.new()
+	hint_button.text = "WATCH AD FOR HINT"
+	hint_button.custom_minimum_size = Vector2(170, 58)
+	hint_button.add_theme_font_size_override("font_size", 19)
+	hint_button.add_theme_stylebox_override("normal", _button_style(Color("#248bc7")))
+	hint_button.pressed.connect(_use_hint)
+	tools.add_child(hint_button)
 	coins_label = _pill_label("0 COINS", Color("#fff2cf"), Color("#4d2512"), 19)
 	coins_label.custom_minimum_size = Vector2(150, 58)
 	tools.add_child(coins_label)
@@ -302,6 +303,7 @@ func _load_level(level_number: int) -> void:
 
 	type_data = parsed
 	current_type_id = str(type_data.get("type", ""))
+	hint_button.text = "HINT" if OS.get_name() != "Android" else "WATCH AD FOR HINT"
 	var levels_arr: Array = type_data.get("levels", [])
 	var has_component := MODE_COMPONENTS.has(current_type_id)
 
@@ -429,10 +431,20 @@ func _update_progress() -> void:
 func _use_hint() -> void:
 	if finished:
 		return
+	if is_instance_valid(active_component) and not active_component.can_use_hint():
+		prompt_label.text = "Wait until the current move finishes, then try Hint."
+		return
+	if OS.get_name() != "Android":
+		_grant_hint()
+		return
 	AdManager.request_rewarded_hint(Callable(self, "_grant_hint"), Callable(self, "_hint_unavailable"))
 
 func _hint_unavailable(message: String) -> void:
-	progress_label.text = message
+	prompt_label.text = message
+	if current_type_id == "word_relay" and active_component is WordRelayComponent:
+		active_component.show_hint_message(message)
+	elif not is_instance_valid(active_component):
+		progress_label.text = message
 
 func _grant_hint() -> void:
 	if finished:
@@ -440,6 +452,8 @@ func _grant_hint() -> void:
 	if is_instance_valid(active_component):
 		if active_component.use_hint(choices_grid):
 			AudioManager.play_hint()
+		else:
+			prompt_label.text = "No hint is available right now. Try again after the next move."
 		return
 
 	var answers: Array = level_data.get("answers", [])
