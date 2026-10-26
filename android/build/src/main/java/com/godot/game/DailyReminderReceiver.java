@@ -7,9 +7,13 @@ import android.content.Intent;
 public final class DailyReminderReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (DailyReminder.ACTION_REMIND.equals(intent.getAction())) {
-            DailyReminder.show(context);
-        } else {
+        String action = intent == null ? null : intent.getAction();
+        if (DailyReminder.ACTION_REMIND.equals(action)) {
+            DailyReminder.remindAndScheduleNext(context);
+        } else if (Intent.ACTION_BOOT_COMPLETED.equals(action)
+                || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)
+                || Intent.ACTION_TIME_CHANGED.equals(action)
+                || Intent.ACTION_TIMEZONE_CHANGED.equals(action)) {
             DailyReminder.scheduleIfEnabled(context);
         }
     }

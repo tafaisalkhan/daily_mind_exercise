@@ -914,8 +914,8 @@ func _complete_level() -> void:
 	checking_sequence = false
 	tick_timer.stop()
 	smoke_timer.stop()
-	var stars := 3
-	var reward := stars * 5
+	var stars := GameState.stars_for_mistakes(errors_made)
+	var reward := GameState.coins_for_stars(stars)
 	GameState.register_game_type_win(2, current_level, stars, reward)
 	coins_label.text = "🪙 %d" % GameState.coins
 	result_title.text = "SENTENCE COMPLETE!\n+%d COINS" % reward

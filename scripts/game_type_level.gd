@@ -334,7 +334,7 @@ func _load_level(level_number: int) -> void:
 		component_host.custom_minimum_size.y = 470
 		choices_scroll.visible = false
 	elif current_type_id == "word_relay":
-		component_host.custom_minimum_size.y = 400
+		component_host.custom_minimum_size.y = 420
 	elif current_type_id == "number_maze":
 		component_host.custom_minimum_size.y = 400
 	sprite_rect.visible = (comp == null)
@@ -407,9 +407,6 @@ func _wrong_answer(button: Button) -> void:
 	var hearts := hearts_label.text.count("♥")
 	hearts = maxi(0, hearts - 1)
 	hearts_label.text = " ".join(PackedStringArray(Array(["♥", "♥", "♥"]).slice(0, hearts)))
-	GameState.coins = maxi(0, GameState.coins - 1)
-	GameState.save_progress()
-	coins_label.text = "%d COINS" % GameState.coins
 	if is_instance_valid(button):
 		var tween := create_tween()
 		tween.tween_property(button, "modulate", Color("#ff6b64"), 0.08)
@@ -470,7 +467,7 @@ func _grant_hint() -> void:
 			break
 
 func _tick() -> void:
-	if finished:
+	if finished or AdManager.is_showing_fullscreen_ad:
 		return
 	if is_instance_valid(active_component) and active_component.is_timer_paused():
 		return
@@ -486,8 +483,8 @@ func _complete_level() -> void:
 	tick_timer.stop()
 	for button in choices_grid.get_children():
 		button.disabled = true
-	var stars := 3
-	var reward := stars * 5
+	var stars := GameState.stars_for_mistakes(3 - hearts_label.text.count("♥"))
+	var reward := GameState.coins_for_stars(stars)
 	var type_index := int((current_level - 1) / 2)
 	GameState.register_game_type_win(type_index, int(mode_stage_indices[current_type_id]) + 1, stars, reward)
 	coins_label.text = "%d COINS" % GameState.coins

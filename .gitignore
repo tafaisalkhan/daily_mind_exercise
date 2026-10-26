@@ -31,6 +31,8 @@ data_*/
 # Exclude art, audio, level banks, JSON, and signing material
 **/assets/
 *.json
+!resources/bird_memory.json
+!resources/bird_catch_bugs.json
 *.jks
 *.keystore
 *.p12

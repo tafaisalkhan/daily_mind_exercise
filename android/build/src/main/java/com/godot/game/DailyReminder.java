@@ -54,6 +54,13 @@ public final class DailyReminder {
         }
     }
 
+    static void remindAndScheduleNext(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        if (!prefs.getBoolean(ENABLED, false)) return;
+        show(context);
+        schedule(context);
+    }
+
     private static PendingIntent reminderIntent(Context context) {
         Intent intent = new Intent(context, DailyReminderReceiver.class).setAction(ACTION_REMIND);
         return PendingIntent.getBroadcast(context, 2301, intent,
@@ -69,8 +76,8 @@ public final class DailyReminder {
         next.set(Calendar.SECOND, 0);
         next.set(Calendar.MILLISECOND, 0);
         if (next.getTimeInMillis() <= System.currentTimeMillis()) next.add(Calendar.DAY_OF_YEAR, 1);
-        alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, next.getTimeInMillis(),
-                AlarmManager.INTERVAL_DAY, reminderIntent(context));
+        alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.getTimeInMillis(),
+                reminderIntent(context));
     }
 
     private static void cancel(Context context) {

@@ -2,8 +2,8 @@ extends Node
 
 const SAVE_PATH := "user://math_mind_progress.cfg"
 const SAVE_VERSION := 2
-const DAILY_TYPES := [0, 1, 2, 3, 4, 6, 7]
-const GAME_TYPE_COUNT := 8
+const DAILY_TYPES := [0, 1, 2, 3, 4, 6, 7, 8, 9]
+const GAME_TYPE_COUNT := 10
 const GAME_TYPE_LEVEL_COUNT := 1000
 
 var highest_level: int = 1
@@ -18,8 +18,14 @@ var game_mode: String = "continue"
 var requested_level: int = 1
 var number_hunt_highest_level: int = 1
 var number_hunt_selected_level: int = 1
-var game_type_progress: Array[int] = [1, 1, 1, 1, 1, 1, 1, 1]
-var game_type_replay_levels: Array[int] = [1, 1, 1, 1, 1, 1, 1, 1]
+var game_type_progress: Array[int] = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+var game_type_replay_levels: Array[int] = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+var bug_catch_progress: Array[int] = [1, 1, 1, 1]
+var bug_catch_replay_levels: Array[int] = [1, 1, 1, 1]
+var bug_catch_order: Array[int] = []
+var bug_catch_cycle: Array[int] = []
+var bug_catch_last_mode: int = -1
+var bug_catch_mode: int = 0
 var active_game_type: int = 0
 var type_level: int = 1
 var music_volume: float = 0.8
@@ -81,6 +87,27 @@ func load_progress() -> void:
 		var fallback := number_hunt_highest_level if index == 6 else 1
 		game_type_progress[index] = clampi(int(saved_type_progress[index]) if index < saved_type_progress.size() else fallback, 1, GAME_TYPE_LEVEL_COUNT + 1)
 		game_type_replay_levels[index] = clampi(int(saved_replay_levels[index]) if index < saved_replay_levels.size() else 1, 1, GAME_TYPE_LEVEL_COUNT)
+	var saved_bug_progress: Array = config.get_value("bird_catch_bugs", "next_levels", [])
+	var saved_bug_replays: Array = config.get_value("bird_catch_bugs", "replay_levels", [])
+	for index in range(4):
+		bug_catch_progress[index] = clampi(int(saved_bug_progress[index]) if index < saved_bug_progress.size() else 1, 1, GAME_TYPE_LEVEL_COUNT + 1)
+		bug_catch_replay_levels[index] = clampi(int(saved_bug_replays[index]) if index < saved_bug_replays.size() else 1, 1, GAME_TYPE_LEVEL_COUNT)
+	bug_catch_last_mode = clampi(int(config.get_value("bird_catch_bugs", "last_mode", -1)), -1, 3)
+	bug_catch_mode = clampi(int(config.get_value("bird_catch_bugs", "active_mode", 0)), 0, 3)
+	bug_catch_order.clear()
+	var saved_order: Array = config.get_value("bird_catch_bugs", "order", [])
+	for value in saved_order:
+		var mode := int(value)
+		if mode >= 0 and mode < 4 and mode not in bug_catch_order:
+			bug_catch_order.append(mode)
+	if bug_catch_order.size() != 4:
+		bug_catch_order.clear()
+	bug_catch_cycle.clear()
+	var saved_cycle: Array = config.get_value("bird_catch_bugs", "remaining_cycle", [])
+	for value in saved_cycle:
+		var mode := int(value)
+		if mode in bug_catch_order and mode not in bug_catch_cycle:
+			bug_catch_cycle.append(mode)
 	highest_levels = [
 		int(config.get_value("progress", "highest_easy", highest_level)),
 		int(config.get_value("progress", "highest_medium", 0)),
@@ -115,6 +142,12 @@ func save_progress() -> void:
 	config.set_value("number_hunt", "selected_level", number_hunt_selected_level)
 	config.set_value("game_types", "next_levels", game_type_progress)
 	config.set_value("game_types", "replay_levels", game_type_replay_levels)
+	config.set_value("bird_catch_bugs", "next_levels", bug_catch_progress)
+	config.set_value("bird_catch_bugs", "replay_levels", bug_catch_replay_levels)
+	config.set_value("bird_catch_bugs", "order", bug_catch_order)
+	config.set_value("bird_catch_bugs", "remaining_cycle", bug_catch_cycle)
+	config.set_value("bird_catch_bugs", "last_mode", bug_catch_last_mode)
+	config.set_value("bird_catch_bugs", "active_mode", bug_catch_mode)
 	highest_levels[difficulty_index] = maxi(highest_levels[difficulty_index], highest_level)
 	config.set_value("progress", "highest_level", highest_level)
 	config.set_value("progress", "highest_easy", highest_levels[0])
@@ -187,7 +220,12 @@ func start_daily_task(index: int) -> void:
 	daily_task_index = clampi(index, 0, 2)
 	active_game_type = int(daily_tasks_for_date(daily_date)[daily_task_index]["type_index"])
 	requested_level = active_game_type * 2 + 1
-	type_level = next_game_type_level(active_game_type)
+	if active_game_type == 9:
+		_pick_bug_catch_mode()
+		type_level = next_bug_catch_level(bug_catch_mode)
+		save_progress()
+	else:
+		type_level = next_game_type_level(active_game_type)
 
 func daily_completed_count(date_key: String) -> int:
 	var flags: Array = daily_history.get(date_key, [])
@@ -216,12 +254,23 @@ func start_game_type(type_index: int) -> void:
 	game_mode = "game_type"
 	active_game_type = clampi(type_index, 0, GAME_TYPE_COUNT - 1)
 	requested_level = active_game_type * 2 + 1
-	type_level = next_game_type_level(active_game_type)
+	if active_game_type == 9:
+		_pick_bug_catch_mode()
+		type_level = next_bug_catch_level(bug_catch_mode)
+		save_progress()
+	else:
+		type_level = next_game_type_level(active_game_type)
 
 func next_game_type_level(type_index: int) -> int:
 	type_index = clampi(type_index, 0, GAME_TYPE_COUNT - 1)
 	var next_level := game_type_progress[type_index]
 	return game_type_replay_levels[type_index] if next_level > GAME_TYPE_LEVEL_COUNT else next_level
+
+func stars_for_mistakes(mistakes: int) -> int:
+	return clampi(3 - mistakes, 1, 3)
+
+func coins_for_stars(stars: int) -> int:
+	return 2 * clampi(stars, 1, 3) - 1
 
 func register_game_type_win(type_index: int, level: int, stars: int, reward: int) -> void:
 	type_index = clampi(type_index, 0, GAME_TYPE_COUNT - 1)
@@ -233,6 +282,35 @@ func register_game_type_win(type_index: int, level: int, stars: int, reward: int
 		game_type_replay_levels[type_index] = level % GAME_TYPE_LEVEL_COUNT + 1
 	# A finished game can be replayed only after its full bank is complete.
 	type_level = next_game_type_level(type_index)
+	coins += reward
+	total_stars += stars
+	win_streak += 1
+	games_played += 1
+	save_progress()
+
+func _pick_bug_catch_mode() -> void:
+	if bug_catch_order.is_empty():
+		bug_catch_order = [0, 1, 2, 3]
+		bug_catch_order.shuffle()
+	if bug_catch_cycle.is_empty():
+		bug_catch_cycle = bug_catch_order.duplicate()
+	bug_catch_mode = bug_catch_cycle.pop_front()
+	bug_catch_last_mode = bug_catch_mode
+
+func next_bug_catch_level(mode: int) -> int:
+	mode = clampi(mode, 0, 3)
+	var next_level := bug_catch_progress[mode]
+	return bug_catch_replay_levels[mode] if next_level > GAME_TYPE_LEVEL_COUNT else next_level
+
+func register_bug_catch_win(mode: int, level: int, stars: int, reward: int) -> void:
+	mode = clampi(mode, 0, 3)
+	if game_mode == "daily":
+		complete_daily_task()
+	if level == bug_catch_progress[mode]:
+		bug_catch_progress[mode] = mini(GAME_TYPE_LEVEL_COUNT + 1, level + 1)
+	elif bug_catch_progress[mode] > GAME_TYPE_LEVEL_COUNT and level == bug_catch_replay_levels[mode]:
+		bug_catch_replay_levels[mode] = level % GAME_TYPE_LEVEL_COUNT + 1
+	type_level = next_bug_catch_level(mode)
 	coins += reward
 	total_stars += stars
 	win_streak += 1

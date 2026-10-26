@@ -14,7 +14,7 @@ func _ready() -> void:
 	play_button.pressed.connect(_start_play)
 	daily_button.pressed.connect(_start_daily)
 	settings_button.pressed.connect(_open_settings)
-	chapter_label.text = "7 GAME TYPES  •  14 STARTER LEVELS"
+	chapter_label.text = "9 GAME TYPES  •  DAILY CHALLENGES"
 	_animate_entrance()
 	_start_idle_motion()
 	if not GameState.privacy_accepted or GameState.show_privacy_on_start:

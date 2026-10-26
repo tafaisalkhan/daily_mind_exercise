@@ -3,6 +3,7 @@ extends Control
 const BACK_ICON := preload("res://assets/ui/back-arrow.svg")
 
 const DISPLAY_FONT := preload("res://assets/fonts/LuckiestGuy-Regular.ttf")
+const BIRD_SHEET := preload("res://resources/birds/bird-parade-sprites.png")
 
 const TYPE_FILES := [
 	"res://assets/data/game_types/synonyms.json",
@@ -12,7 +13,9 @@ const TYPE_FILES := [
 	"res://assets/data/game_types/number_balance.json",
 	"res://assets/data/game_types/number_maze.json",
 	"res://assets/data/game_types/number_hunt.json",
-	"res://assets/data/game_types/word_relay.json"
+	"res://assets/data/game_types/word_relay.json",
+	"res://resources/bird_memory.json",
+	"res://resources/bird_catch_bugs.json"
 ]
 const TYPE_SUBTITLES := [
 	"Find matching words",
@@ -22,7 +25,9 @@ const TYPE_SUBTITLES := [
 	"Solve the equation",
 	"Follow number rules",
 	"Solve clues and catch numbers",
-	"Change one letter"
+	"Change one letter",
+	"Remember the bird parade",
+	"Catch bugs by word or number"
 ]
 
 func _ready() -> void:
@@ -145,7 +150,14 @@ func _create_card(index: int, data: Dictionary) -> Button:
 	image.offset_top = 9
 	image.offset_right = -12
 	image.offset_bottom = 149
-	image.texture = load(str(data["sprite"]))
+	if index == 8:
+		var bird_icon := AtlasTexture.new()
+		bird_icon.atlas = BIRD_SHEET
+		var half := BIRD_SHEET.get_size() / 2.0
+		bird_icon.region = Rect2(half, half)
+		image.texture = bird_icon
+	else:
+		image.texture = load(str(data["sprite"]))
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -188,7 +200,10 @@ func _create_card(index: int, data: Dictionary) -> Button:
 	level_count.offset_right = -10
 	level_count.offset_bottom = -8
 	var next_level := GameState.game_type_progress[index]
-	level_count.text = "1000/1000 COMPLETE" if next_level > 1000 else "LEVEL %d / 1000" % next_level
+	if index == 9:
+		level_count.text = "4 MODES • ONE PER PLAY"
+	else:
+		level_count.text = "1000/1000 COMPLETE" if next_level > 1000 else "LEVEL %d / 1000" % next_level
 	level_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	level_count.add_theme_font_size_override("font_size", 12)
 	level_count.add_theme_color_override("font_color", Color("#8ce9dc"))
@@ -204,6 +219,10 @@ func _play_type(index: int) -> void:
 		get_tree().change_scene_to_file("res://scenes/balloon_match.tscn")
 	elif index == 2:
 		get_tree().change_scene_to_file("res://scenes/sentence_train.tscn")
+	elif index == 8:
+		get_tree().change_scene_to_file("res://scenes/bird_memory.tscn")
+	elif index == 9:
+		get_tree().change_scene_to_file("res://scenes/bird_catch_bugs.tscn")
 	else:
 		get_tree().change_scene_to_file("res://scenes/game_type_level.tscn")
 

@@ -3,22 +3,37 @@ extends Control
 const DISPLAY_FONT := preload("res://assets/fonts/LuckiestGuy-Regular.ttf")
 const BACK_ICON := preload("res://assets/ui/back-arrow.svg")
 const BACKGROUND := preload("res://assets/generated/daily-mind-owl-menu-background.png")
-const TYPE_NAMES := ["BALLOON MATCH", "BUILD WORDS", "SENTENCE TRAIN", "NUMBER BRIDGE", "BALANCE THE SCALE", "NUMBER MAZE", "NUMBER HUNTER", "WORD RELAY"]
+const TYPE_NAMES := ["BALLOON MATCH", "BUILD WORDS", "SENTENCE TRAIN", "NUMBER BRIDGE", "BALANCE THE SCALE", "NUMBER MAZE", "NUMBER HUNTER", "WORD RELAY", "BIRD PARADE", "BIRD CATCH BUGS"]
 const MONTH_NAMES := ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"]
 
 var _month: int
 var _year: int
 var _month_label: Label
 var _calendar_grid: GridContainer
+var _steps_row: HBoxContainer
 var _tasks_panel: VBoxContainer
 var _instruction: Label
+var _today_label: Label
 
 func _ready() -> void:
+	var prev_mode := GameState.game_mode
+	var prev_task_index := GameState.daily_task_index
+	var prev_date := GameState.daily_date
+
 	GameState.open_daily()
+	var today_str := GameState.today_key()
 	var date := Time.get_date_dict_from_system()
 	_month = date.month
 	_year = date.year
 	_build_screen()
+	_show_today_tasks()
+
+	# Auto-advance from Exercise 1 -> 2 -> 3 when returning right after completing the previous exercise
+	if prev_mode == "daily" and prev_date == today_str and prev_task_index >= 0 and prev_task_index < 2:
+		var flags: Array = GameState.daily_history.get(today_str, [false, false, false])
+		if bool(flags[prev_task_index]) and not bool(flags[prev_task_index + 1]):
+			_instruction.text = "EXERCISE %d COMPLETE! STARTING EXERCISE %d..." % [prev_task_index + 1, prev_task_index + 2]
+			call_deferred("_start_task", prev_task_index + 1)
 
 func _build_screen() -> void:
 	var background := TextureRect.new()
@@ -37,8 +52,8 @@ func _build_screen() -> void:
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 24)
 	margin.add_theme_constant_override("margin_right", 24)
-	margin.add_theme_constant_override("margin_top", 72)
-	margin.add_theme_constant_override("margin_bottom", 72)
+	margin.add_theme_constant_override("margin_top", 64)
+	margin.add_theme_constant_override("margin_bottom", 64)
 	add_child(margin)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -46,7 +61,7 @@ func _build_screen() -> void:
 	margin.add_child(scroll)
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	column.add_theme_constant_override("separation", 18)
+	column.add_theme_constant_override("separation", 14)
 	scroll.add_child(column)
 	var header := HBoxContainer.new()
 	column.add_child(header)
@@ -71,13 +86,42 @@ func _build_screen() -> void:
 	var spacer := Control.new()
 	spacer.custom_minimum_size.x = 58
 	header.add_child(spacer)
-	var today := Label.new()
-	today.text = "%s  •  %d / 3 COMPLETED" % [GameState.today_key(), GameState.daily_completed_count(GameState.today_key())]
-	today.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	today.add_theme_font_override("font", DISPLAY_FONT)
-	today.add_theme_font_size_override("font_size", 20)
-	today.add_theme_color_override("font_color", Color("#ffd77a"))
-	column.add_child(today)
+
+	var done_count := GameState.daily_completed_count(GameState.today_key())
+	_today_label = Label.new()
+	_today_label.text = "%s  •  %s" % [GameState.today_key(), "✓ COMPLETE (3 / 3)" if done_count == 3 else "%d / 3 COMPLETED" % done_count]
+	_today_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_today_label.add_theme_font_override("font", DISPLAY_FONT)
+	_today_label.add_theme_font_size_override("font_size", 20)
+	_today_label.add_theme_color_override("font_color", Color("#79eadc") if done_count == 3 else Color("#ffd77a"))
+	column.add_child(_today_label)
+
+	# 1 -> 2 -> 3 Step Progress Row & Today's 3 Exercises (shown immediately without tapping calendar)
+	var exercise_panel := PanelContainer.new()
+	exercise_panel.add_theme_stylebox_override("panel", _style(Color(0.06, 0.09, 0.31, 0.96), Color("#ffd77a")))
+	column.add_child(exercise_panel)
+	var exercise_column := VBoxContainer.new()
+	exercise_column.add_theme_constant_override("separation", 10)
+	exercise_panel.add_child(exercise_column)
+
+	_instruction = Label.new()
+	_instruction.text = "TODAY'S 3 EXERCISES"
+	_instruction.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_instruction.add_theme_font_override("font", DISPLAY_FONT)
+	_instruction.add_theme_font_size_override("font_size", 20)
+	_instruction.add_theme_color_override("font_color", Color("#fff5df"))
+	exercise_column.add_child(_instruction)
+
+	_steps_row = HBoxContainer.new()
+	_steps_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_steps_row.add_theme_constant_override("separation", 8)
+	exercise_column.add_child(_steps_row)
+
+	_tasks_panel = VBoxContainer.new()
+	_tasks_panel.visible = true
+	_tasks_panel.add_theme_constant_override("separation", 10)
+	exercise_column.add_child(_tasks_panel)
+
 	var calendar_panel := PanelContainer.new()
 	calendar_panel.add_theme_stylebox_override("panel", _style(Color(0.06, 0.09, 0.31, 0.96), Color("#79eadc")))
 	column.add_child(calendar_panel)
@@ -115,54 +159,102 @@ func _build_screen() -> void:
 	legend.add_theme_color_override("font_color", Color("#fff5df"))
 	calendar_column.add_child(legend)
 	_refresh_calendar()
-	_instruction = Label.new()
-	_instruction.text = "TAP TODAY'S DATE TO CHOOSE YOUR 3 GAMES"
-	_instruction.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_instruction.add_theme_font_size_override("font_size", 18)
-	_instruction.add_theme_color_override("font_color", Color("#fff5df"))
-	column.add_child(_instruction)
-	_tasks_panel = VBoxContainer.new()
-	_tasks_panel.visible = false
-	_tasks_panel.add_theme_constant_override("separation", 10)
-	column.add_child(_tasks_panel)
+
+func _first_incomplete_index(flags: Array) -> int:
+	for index in range(3):
+		if index >= flags.size() or not bool(flags[index]):
+			return index
+	return -1
 
 func _show_today_tasks() -> void:
-	if _year != int(GameState.today_key().substr(0, 4)) or _month != int(GameState.today_key().substr(5, 2)):
-		return
+	for child in _steps_row.get_children():
+		child.queue_free()
 	for child in _tasks_panel.get_children():
 		child.queue_free()
-	var tasks := GameState.daily_tasks_for_date(GameState.today_key())
-	var flags: Array = GameState.daily_history.get(GameState.today_key(), [false, false, false])
+
+	var today_str := GameState.today_key()
+	var tasks := GameState.daily_tasks_for_date(today_str)
+	var flags: Array = GameState.daily_history.get(today_str, [false, false, false])
+	var active_index := _first_incomplete_index(flags)
+	var all_done := (active_index == -1)
+
+	# Build the 1 ── 2 ── 3 step indicator bar
+	for index in range(3):
+		var done := bool(flags[index])
+		var is_current := (index == active_index)
+		var step_btn := Button.new()
+		step_btn.custom_minimum_size = Vector2(92, 52)
+		step_btn.text = "%d ✓" % (index + 1) if done else str(index + 1)
+		step_btn.add_theme_font_override("font", DISPLAY_FONT)
+		step_btn.add_theme_font_size_override("font_size", 22)
+		for state in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color"]:
+			step_btn.add_theme_color_override(state, Color("#fff9e8"))
+		var step_fill := Color("#17675f") if done else (Color("#d4851f") if is_current else Color("#1b264f"))
+		var step_border := Color("#79eadc") if done else (Color("#ffd77a") if is_current else Color("#415284"))
+		step_btn.add_theme_stylebox_override("normal", _style(step_fill, step_border, 14))
+		step_btn.add_theme_stylebox_override("hover", _style(step_fill.lightened(0.1), step_border, 14))
+		step_btn.add_theme_stylebox_override("disabled", _style(step_fill, step_border, 14))
+		step_btn.disabled = not is_current
+		if is_current:
+			step_btn.pressed.connect(_start_task.bind(index))
+		_steps_row.add_child(step_btn)
+
+		if index < 2:
+			var connector := Label.new()
+			connector.text = "━━"
+			connector.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			connector.add_theme_font_size_override("font_size", 18)
+			connector.add_theme_color_override("font_color", Color("#79eadc") if done else Color("#415284"))
+			_steps_row.add_child(connector)
+
+	# Build the 1, 2, 3 exercise cards (sequential: start with 1, then auto 2, then auto 3)
 	for index in range(3):
 		var task: Dictionary = tasks[index]
 		var done := bool(flags[index])
+		var is_current := (index == active_index)
+		var status_text := "✓ COMPLETED" if done else ("▶ START" if is_current else "🔒 NEXT")
 		var card := Button.new()
-		card.custom_minimum_size.y = 70
-		card.text = "%d  %s   %s" % [index + 1, TYPE_NAMES[int(task["type_index"])], "✓ DONE" if done else "PLAY"]
+		card.custom_minimum_size.y = 66
+		card.text = "%d.  %s   —   %s" % [index + 1, TYPE_NAMES[int(task["type_index"])], status_text]
 		card.add_theme_font_override("font", DISPLAY_FONT)
-		card.add_theme_font_size_override("font_size", 20)
+		card.add_theme_font_size_override("font_size", 19)
 		for state in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color"]:
-			card.add_theme_color_override(state, Color("#fff9e8"))
-		var fill := Color("#17675f") if done else Color("#28386f")
-		card.add_theme_stylebox_override("normal", _style(fill, Color("#79eadc") if done else Color("#ff9b82")))
-		card.add_theme_stylebox_override("disabled", _style(fill, Color("#79eadc")))
-		card.add_theme_stylebox_override("hover", _style(Color("#394a8a"), Color("#ffd77a")))
-		card.disabled = done
-		if not done:
+			card.add_theme_color_override(state, Color("#fff9e8") if (done or is_current) else Color("#9aa9cc"))
+		var fill := Color("#17675f") if done else (Color("#2f468b") if is_current else Color("#182347"))
+		var border := Color("#79eadc") if done else (Color("#ffd77a") if is_current else Color("#3b4c7a"))
+		card.add_theme_stylebox_override("normal", _style(fill, border))
+		card.add_theme_stylebox_override("disabled", _style(fill, border))
+		card.add_theme_stylebox_override("hover", _style(Color("#3d58ab"), Color("#ffd77a")))
+		card.disabled = not is_current
+		if is_current:
 			card.pressed.connect(_start_task.bind(index))
 		_tasks_panel.add_child(card)
+
 	_tasks_panel.visible = true
-	_instruction.text = "TODAY'S 3 EXERCISES"
+	if all_done:
+		_instruction.text = "✓ DAILY EXERCISE COMPLETE!"
+		_instruction.add_theme_color_override("font_color", Color("#79eadc"))
+		if is_instance_valid(_today_label):
+			_today_label.text = "%s  •  ✓ COMPLETE (3 / 3)" % today_str
+			_today_label.add_theme_color_override("font_color", Color("#79eadc"))
+	else:
+		_instruction.text = "START WITH #%d — AUTO-ADVANCES 1 → 2 → 3" % (active_index + 1)
+		_instruction.add_theme_color_override("font_color", Color("#ffd77a"))
 
 func _start_task(index: int) -> void:
 	var flags: Array = GameState.daily_history.get(GameState.today_key(), [false, false, false])
-	if index < 0 or index >= 3 or bool(flags[index]):
+	var expected_index := _first_incomplete_index(flags)
+	if index < 0 or index >= 3 or bool(flags[index]) or index != expected_index:
 		return
 	GameState.start_daily_task(index)
 	if GameState.active_game_type == 0:
 		get_tree().change_scene_to_file("res://scenes/balloon_match.tscn")
 	elif GameState.active_game_type == 2:
 		get_tree().change_scene_to_file("res://scenes/sentence_train.tscn")
+	elif GameState.active_game_type == 8:
+		get_tree().change_scene_to_file("res://scenes/bird_memory.tscn")
+	elif GameState.active_game_type == 9:
+		get_tree().change_scene_to_file("res://scenes/bird_catch_bugs.tscn")
 	else:
 		get_tree().change_scene_to_file("res://scenes/game_type_level.tscn")
 
@@ -174,8 +266,6 @@ func _change_month(step: int) -> void:
 	elif _month > 12:
 		_month = 1
 		_year += 1
-	_tasks_panel.visible = false
-	_instruction.text = "TAP TODAY'S DATE TO CHOOSE YOUR 3 GAMES" if _year == int(GameState.today_key().substr(0, 4)) and _month == int(GameState.today_key().substr(5, 2)) else "PAST AND FUTURE DAYS ARE VIEW ONLY"
 	_refresh_calendar()
 
 func _refresh_calendar() -> void:

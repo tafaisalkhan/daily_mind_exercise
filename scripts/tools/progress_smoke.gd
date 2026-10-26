@@ -15,7 +15,7 @@ func _run() -> void:
 	for type_index in range(8):
 		state.start_game_type(type_index)
 		assert(state.type_level == 1)
-		state.register_game_type_win(type_index, 1, 3, 15)
+		state.register_game_type_win(type_index, 1, 3, 5)
 		assert(state.type_level == 2)
 	var restored = StateScript.new()
 	restored.load_progress()
@@ -24,10 +24,10 @@ func _run() -> void:
 		assert(restored.type_level == 2)
 	restored.game_type_progress[3] = 1000
 	restored.start_game_type(3)
-	restored.register_game_type_win(3, 1000, 3, 15)
+	restored.register_game_type_win(3, 1000, 3, 5)
 	assert(restored.game_type_progress[3] == 1001)
 	assert(restored.next_game_type_level(3) == 1)
-	restored.register_game_type_win(3, 1, 3, 15)
+	restored.register_game_type_win(3, 1, 3, 5)
 	assert(restored.game_type_progress[3] == 1001)
 	assert(restored.next_game_type_level(3) == 2)
 	if existed:

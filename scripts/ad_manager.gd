@@ -9,6 +9,9 @@ const INTERSTITIAL_AD_ID: String = "ca-app-pub-1852108665659812/2005833268"
 const REWARDED_AD_ID: String = "ca-app-pub-1852108665659812/8552516586"
 const REWARDED_INTERSTITIAL_AD_ID: String = ""
 
+const TOP_BANNER_SHOW_SECONDS: float = 5.0
+const TOP_BANNER_HIDE_SECONDS: float = 2.0
+
 static var instance: Node
 static var is_initialized: bool = false
 var _plugin_available: bool = false
@@ -21,12 +24,17 @@ signal rewarded_interstitial_unavailable(message: String)
 # Cached loaded ad objects
 var _banner_view_top = null
 var _banner_view_bottom = null
+var _top_banner_loaded := false
+var _top_banner_visible := false
+var _top_banner_cycle_timer: Timer
 var _interstitial_ad = null
 var _interstitial_loading := false
 var _rewarded_ad = null
+var _active_rewarded_ad = null
 var _rewarded_loading := false
 var _rewarded_interstitial_ad = null
 var _retry_timer: Timer
+var is_showing_fullscreen_ad := false
 
 # REQUIRED: Keep callbacks alive so Godot doesn't garbage collect them!
 var _init_listener = null
@@ -35,6 +43,7 @@ var _banner_cb_bottom = null
 var _interstitial_cb = null
 var _interstitial_content_cb = null
 var _rewarded_cb = null
+var _rewarded_content_cb = null
 var _reward_listener = null
 var _rewarded_interstitial_cb = null
 var _rewarded_interstitial_content_cb = null
@@ -51,22 +60,30 @@ func _enter_tree() -> void:
 	instance = self
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().scene_changed.connect(_on_scene_changed)
 	_retry_timer = Timer.new()
+	_retry_timer.process_mode = Node.PROCESS_MODE_ALWAYS
 	_retry_timer.wait_time = 20.0
 	_retry_timer.timeout.connect(_retry_unavailable_ads)
 	add_child(_retry_timer)
+
+	_top_banner_cycle_timer = Timer.new()
+	_top_banner_cycle_timer.process_mode = Node.PROCESS_MODE_ALWAYS
+	_top_banner_cycle_timer.one_shot = true
+	_top_banner_cycle_timer.timeout.connect(_on_top_banner_cycle_timeout)
+	add_child(_top_banner_cycle_timer)
+
 	print("[AdManager] _ready - checking for MobileAds plugin...")
 	if OS.get_name() == "Android":
 		_plugin_available = true
-		
 		print("[AdManager] Running on Android - initializing AdMob with banner: ", banner_id)
 		_init_admob()
 	else:
 		print("[AdManager] Not on Android - ads disabled (desktop/editor mode)")
 
 func _on_scene_changed() -> void:
-	# Banner views are native overlays. Keep both visible across menu and game scenes.
+	# Banner views are native overlays. Keep bottom visible and top cycling across scenes.
 	show_banner()
 
 func _init_admob() -> void:
@@ -91,19 +108,51 @@ func _init_admob() -> void:
 func _load_banner_top() -> void:
 	if not is_initialized or GameState.ads_removed or _banner_view_top != null:
 		return
+	_top_banner_loaded = false
 	_banner_view_top = AdView.new(banner_id, AdSize.BANNER, AdPosition.TOP)
 	_banner_cb_top = AdListener.new()
 	_banner_cb_top.on_ad_loaded = func() -> void:
 		print("[AdManager] Top banner loaded")
+		_top_banner_loaded = true
 		if _banner_view_top and not GameState.ads_removed:
-			_banner_view_top.show()
+			_start_top_banner_show_phase()
 	_banner_cb_top.on_ad_failed_to_load = func(error: LoadAdError) -> void:
 		print("[AdManager] Top banner failed: ", error.message)
+		_top_banner_loaded = false
+		_top_banner_visible = false
+		if is_instance_valid(_top_banner_cycle_timer):
+			_top_banner_cycle_timer.stop()
 		if _banner_view_top:
 			_banner_view_top.destroy()
 			_banner_view_top = null
 	_banner_view_top.ad_listener = _banner_cb_top
 	_banner_view_top.load_ad(AdRequest.new())
+
+func _start_top_banner_show_phase() -> void:
+	if GameState.ads_removed or _banner_view_top == null or not _top_banner_loaded:
+		return
+	_top_banner_visible = true
+	_banner_view_top.show()
+	if is_instance_valid(_top_banner_cycle_timer):
+		_top_banner_cycle_timer.wait_time = TOP_BANNER_SHOW_SECONDS
+		_top_banner_cycle_timer.start()
+
+func _on_top_banner_cycle_timeout() -> void:
+	if GameState.ads_removed or _banner_view_top == null or not _top_banner_loaded:
+		_top_banner_visible = false
+		return
+	if _top_banner_visible:
+		# Hide top banner for 2 seconds after being shown for 5 seconds
+		_top_banner_visible = false
+		_banner_view_top.hide()
+		_top_banner_cycle_timer.wait_time = TOP_BANNER_HIDE_SECONDS
+		_top_banner_cycle_timer.start()
+	else:
+		# Show top banner again for 5 seconds
+		_top_banner_visible = true
+		_banner_view_top.show()
+		_top_banner_cycle_timer.wait_time = TOP_BANNER_SHOW_SECONDS
+		_top_banner_cycle_timer.start()
 
 func _load_banner_bottom() -> void:
 	if not is_initialized or GameState.ads_removed or _banner_view_bottom != null:
@@ -131,14 +180,22 @@ func show_banner() -> void:
 		return
 	if _banner_view_top == null:
 		_load_banner_top()
-	else:
-		_banner_view_top.show()
+	elif _top_banner_loaded:
+		if is_instance_valid(_top_banner_cycle_timer) and _top_banner_cycle_timer.is_stopped():
+			_start_top_banner_show_phase()
+		elif _top_banner_visible:
+			_banner_view_top.show()
+		else:
+			_banner_view_top.hide()
 	if _banner_view_bottom == null:
 		_load_banner_bottom()
 	else:
 		_banner_view_bottom.show()
 
 func hide_banner() -> void:
+	_top_banner_visible = false
+	if is_instance_valid(_top_banner_cycle_timer):
+		_top_banner_cycle_timer.stop()
 	if _banner_view_top:
 		_banner_view_top.hide()
 	if _banner_view_bottom:
@@ -159,13 +216,19 @@ func _load_interstitial() -> void:
 		_interstitial_ad = ad
 		print("[AdManager] Interstitial Ad loaded!")
 		_interstitial_content_cb = FullScreenContentCallback.new()
+		_interstitial_content_cb.on_ad_showed_full_screen_content = func() -> void:
+			is_showing_fullscreen_ad = true
 		_interstitial_content_cb.on_ad_dismissed_full_screen_content = func() -> void:
-			_interstitial_ad.destroy()
-			_interstitial_ad = null
+			is_showing_fullscreen_ad = false
+			if _interstitial_ad:
+				_interstitial_ad.destroy()
+				_interstitial_ad = null
 			_load_interstitial()
 		_interstitial_content_cb.on_ad_failed_to_show_full_screen_content = func(_err: AdError) -> void:
-			_interstitial_ad.destroy()
-			_interstitial_ad = null
+			is_showing_fullscreen_ad = false
+			if _interstitial_ad:
+				_interstitial_ad.destroy()
+				_interstitial_ad = null
 			_load_interstitial()
 		ad.full_screen_content_callback = _interstitial_content_cb
 
@@ -197,12 +260,6 @@ func _load_rewarded() -> void:
 		_rewarded_loading = false
 		_rewarded_ad = ad
 		print("[AdManager] Rewarded Ad loaded!")
-		ad.full_screen_content_callback.on_ad_dismissed_full_screen_content = func():
-			_rewarded_ad = null
-			_load_rewarded()
-		ad.full_screen_content_callback.on_ad_failed_to_show_full_screen_content = func(_err):
-			_rewarded_ad = null
-			_load_rewarded()
 
 	_rewarded_cb.on_ad_failed_to_load = func(_err) -> void:
 		_rewarded_loading = false
@@ -226,36 +283,71 @@ func show_rewarded_video() -> bool:
 		return false
 
 	if _rewarded_ad:
-		var user_rewarded: Array[bool] = [false]
+		_active_rewarded_ad = _rewarded_ad
+		_rewarded_ad = null
+		var state := {"rewarded": false, "completed_emitted": false, "dismissed": false}
 		_reward_listener = OnUserEarnedRewardListener.new()
 		_reward_listener.on_user_earned_reward = func(_item):
-			user_rewarded[0] = true
-		_rewarded_ad.full_screen_content_callback.on_ad_dismissed_full_screen_content = func():
-			_rewarded_ad.destroy()
-			_rewarded_ad = null
-			_load_rewarded()
-			if user_rewarded[0]:
+			state["rewarded"] = true
+			if not state["completed_emitted"]:
+				state["completed_emitted"] = true
 				rewarded_video_completed.emit()
-			else:
-				rewarded_video_unavailable.emit("Watch the full ad to unlock the hint.")
-		_rewarded_ad.full_screen_content_callback.on_ad_failed_to_show_full_screen_content = func(_error):
-			_rewarded_ad.destroy()
-			_rewarded_ad = null
+		_rewarded_content_cb = FullScreenContentCallback.new()
+		_rewarded_content_cb.on_ad_showed_full_screen_content = func() -> void:
+			is_showing_fullscreen_ad = true
+		_rewarded_content_cb.on_ad_dismissed_full_screen_content = func() -> void:
+			is_showing_fullscreen_ad = false
+			state["dismissed"] = true
+			if state["rewarded"] and not state["completed_emitted"]:
+				state["completed_emitted"] = true
+				rewarded_video_completed.emit()
+			elif not state["rewarded"] and not state["completed_emitted"]:
+				# Give deferred on_user_earned_reward a frame to arrive before declaring unrewarded
+				get_tree().create_timer(0.15).timeout.connect(func() -> void:
+					if state["rewarded"] and not state["completed_emitted"]:
+						state["completed_emitted"] = true
+						rewarded_video_completed.emit()
+					elif not state["completed_emitted"]:
+						rewarded_video_unavailable.emit("Watch the full ad to unlock the hint.")
+					if _active_rewarded_ad:
+						_active_rewarded_ad.destroy()
+						_active_rewarded_ad = null
+					_load_rewarded()
+				)
+				return
+			if _active_rewarded_ad:
+				_active_rewarded_ad.destroy()
+				_active_rewarded_ad = null
 			_load_rewarded()
-			rewarded_video_unavailable.emit("The ad could not open. Please try again.")
-		_rewarded_ad.show(_reward_listener)
+		_rewarded_content_cb.on_ad_failed_to_show_full_screen_content = func(_error) -> void:
+			is_showing_fullscreen_ad = false
+			if _active_rewarded_ad:
+				_active_rewarded_ad.destroy()
+				_active_rewarded_ad = null
+			_load_rewarded()
+			if not state["completed_emitted"]:
+				state["completed_emitted"] = true
+				rewarded_video_completed.emit()
+		_active_rewarded_ad.full_screen_content_callback = _rewarded_content_cb
+		_active_rewarded_ad.show(_reward_listener)
 		return true
 
-	rewarded_video_unavailable.emit("The rewarded ad is still loading. Please try again shortly.")
 	if is_initialized:
 		_load_rewarded()
-	return false
+	# Fallback: if rewarded video is still loading or has no fill, grant the hint so gameplay hints always work.
+	rewarded_video_completed.emit()
+	return true
 
 func request_rewarded_hint(on_reward: Callable, on_unavailable: Callable) -> void:
-	if _hint_reward.is_valid():
-		return
+	if rewarded_video_completed.is_connected(_on_hint_rewarded):
+		rewarded_video_completed.disconnect(_on_hint_rewarded)
+	if rewarded_video_unavailable.is_connected(_on_hint_unavailable):
+		rewarded_video_unavailable.disconnect(_on_hint_unavailable)
 	_hint_reward = on_reward
 	_hint_unavailable = on_unavailable
+	if GameState.ads_removed or not _plugin_available:
+		_on_hint_rewarded()
+		return
 	rewarded_video_completed.connect(_on_hint_rewarded, CONNECT_ONE_SHOT)
 	rewarded_video_unavailable.connect(_on_hint_unavailable, CONNECT_ONE_SHOT)
 	show_rewarded_video()
@@ -277,6 +369,7 @@ func _on_hint_unavailable(message: String) -> void:
 	_hint_unavailable = Callable()
 	if callback.is_valid():
 		callback.call(message)
+
 # =================== REWARDED INTERSTITIAL ===================
 
 func _load_rewarded_interstitial() -> void:

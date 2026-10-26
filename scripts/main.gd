@@ -253,7 +253,6 @@ func _place_bank_tile(grid_tile, bank_tile) -> void:
 	AudioManager.play_place(bank_tile.value == grid_tile.target_value)
 	if bank_tile.value != grid_tile.target_value:
 		mistakes += 1
-		_deduct_wrong_answer_coins()
 		_spawn_tile_feedback(grid_tile, false)
 	else:
 		_spawn_tile_feedback(grid_tile, true)
@@ -264,14 +263,6 @@ func _place_bank_tile(grid_tile, bank_tile) -> void:
 	})
 	check_level_completion()
 
-func _deduct_wrong_answer_coins() -> void:
-	coins = maxi(0, coins - 10)
-	GameState.coins = coins
-	GameState.save_progress()
-	update_coins_display()
-	if coins == 0 and not level_failed:
-		level_failed = true
-		call_deferred("_show_zero_coin_failure")
 func _fly_bank_tile_to_selected_cell(bank_tile, grid_tile) -> void:
 	var flying_tile: Control = bank_tile.make_visual_copy()
 	flying_tile.global_position = bank_tile.global_position
@@ -293,7 +284,6 @@ func _fly_bank_tile_to_selected_cell(bank_tile, grid_tile) -> void:
 		grid_tile.place_value(bank_tile.value)
 		if bank_tile.value != grid_tile.target_value:
 			mistakes += 1
-			_deduct_wrong_answer_coins()
 			_spawn_tile_feedback(grid_tile, false)
 		else:
 			_spawn_tile_feedback(grid_tile, true)
@@ -537,8 +527,8 @@ func check_level_completion() -> void:
 		if level_completion_started:
 			return
 		level_completion_started = true
-		var stars := 3
-		var reward := 10
+		var stars := GameState.stars_for_mistakes(mistakes)
+		var reward := GameState.coins_for_stars(stars)
 		GameState.coins = coins
 		GameState.register_win(current_level, stars, reward)
 		# The visible balance increases only when animated coins arrive.
@@ -763,7 +753,7 @@ func _spawn_victory_particles() -> void:
 		tween.chain().tween_callback(particle.queue_free)
 
 func _fly_reward_coins(reward: int) -> void:
-	var coin_count := mini(8, maxi(3, reward / 20))
+	var coin_count := mini(8, maxi(1, reward))
 	var target_balance := GameState.coins
 	var base_increment := floori(float(reward) / float(coin_count))
 	var remainder := reward % coin_count

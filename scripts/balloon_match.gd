@@ -507,8 +507,8 @@ func _tick() -> void:
 func _complete() -> void:
 	finished = true
 	timer.stop()
-	var stars := 3
-	var reward := stars * 5
+	var stars := GameState.stars_for_mistakes(3 - hearts)
+	var reward := GameState.coins_for_stars(stars)
 	GameState.register_game_type_win(0, current_level, stars, reward)
 	result_title.text = "ALL BALLOONS MATCHED!\n+%d COINS" % reward
 	result_stars.visible = true
