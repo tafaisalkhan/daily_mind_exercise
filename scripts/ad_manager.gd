@@ -2,11 +2,11 @@ extends Node
 ## AdManager - Google AdMob integration (Poing AdMob Plugin v5)
 ## Banners, completion interstitials, and optional rewarded hints.
 
-# Google AdMob Ad Unit IDs
-const ADMOB_APP_ID: String = "ca-app-pub-1852108665659812~2561823306"
-const BANNER_AD_ID: String = "ca-app-pub-1852108665659812/9860272553"
-const INTERSTITIAL_AD_ID: String = "ca-app-pub-1852108665659812/2005833268"
-const REWARDED_AD_ID: String = "ca-app-pub-1852108665659812/8552516586"
+# Google Official Test Ad Unit IDs (production IDs are loaded from gitignored res://admob_secrets.gd)
+const ADMOB_APP_ID: String = "ca-app-pub-3940256099942544~3347511713"
+const BANNER_AD_ID: String = "ca-app-pub-3940256099942544/6300978111"
+const INTERSTITIAL_AD_ID: String = "ca-app-pub-3940256099942544/1033173712"
+const REWARDED_AD_ID: String = "ca-app-pub-3940256099942544/5224354917"
 const REWARDED_INTERSTITIAL_AD_ID: String = ""
 
 const TOP_BANNER_SHOW_SECONDS: float = 5.0
@@ -58,6 +58,15 @@ var _hint_unavailable: Callable = Callable()
 
 func _enter_tree() -> void:
 	instance = self
+	if ResourceLoader.exists("res://admob_secrets.gd"):
+		var secrets = load("res://admob_secrets.gd")
+		if secrets != null:
+			if "BANNER_AD_ID" in secrets and not str(secrets.BANNER_AD_ID).is_empty():
+				banner_id = str(secrets.BANNER_AD_ID)
+			if "INTERSTITIAL_AD_ID" in secrets and not str(secrets.INTERSTITIAL_AD_ID).is_empty():
+				interstitial_id = str(secrets.INTERSTITIAL_AD_ID)
+			if "REWARDED_AD_ID" in secrets and not str(secrets.REWARDED_AD_ID).is_empty():
+				rewarded_id = str(secrets.REWARDED_AD_ID)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
